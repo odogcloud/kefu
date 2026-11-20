@@ -172,13 +172,16 @@ Thấy `"url":"https://kf.odogcloud.com/telegram-webhook"` và **không có** `l
 
 ## 8. Gắn khung chat vào odogcloud.com
 
-aaPanel → **Files** → `/www/wwwroot/odogcloud.com/index.html` → **Edit** → thêm dòng này **ngay trước `</body>`**:
+**Đã tích hợp sẵn trong giao diện DK_Theme** (repo [odogcloud/home](https://github.com/odogcloud/home), từ 20/11/2026). Chỉ cần trong file `.env` của theme có dòng:
+```env
+VITE_CHAT_WIDGET_URL=https://kf.odogcloud.com/chat-widget.js
+```
+rồi build và tải theme lên như bình thường (hướng dẫn theme mục 4 và mục 6). Không cần sửa `index.html` hay cấu hình Nginx. Để trống dòng này thì không có khung chat.
+
+Trang khác (không dùng DK_Theme) muốn có khung chat thì thêm dòng này trước `</body>`:
 ```html
 <script src="https://kf.odogcloud.com/chat-widget.js" data-chat-widget defer></script>
 ```
-Lưu lại. Tải lại `odogcloud.com` bằng **Ctrl+F5**, góc phải dưới sẽ có nút **"✦ 在线客服"**.
-
-⚠️ **Mỗi lần build lại giao diện DK_Theme** và tải `index.html` mới lên, **phải thêm lại dòng này**. Dòng này không nằm trong mã nguồn theme, nhờ vậy theme vẫn giống tác giả.
 
 - **Máy tính:** bấm nút mở khung chat 400×700 ở góc phải.
 - **Điện thoại:** bấm nút mở khung chat **toàn màn hình ngay trên trang**, bấm ⌄ để thu lại.
@@ -224,7 +227,7 @@ Lưu lại. Tải lại `odogcloud.com` bằng **Ctrl+F5**, góc phải dưới 
 | Khách gửi tin nhưng Telegram không có topic | Nhóm chưa bật Topics, bot chưa là admin hoặc thiếu quyền Manage Topics, sai `CHAT_ID` | Mục 1.2 và 1.3 |
 | Trả lời trên Telegram mà khách không nhận | Webhook chưa đặt hoặc sai secret, trả lời ngoài topic | Mục 7, `getWebhookInfo` |
 | `getWebhookInfo` báo lỗi 403 hoặc 5xx | Cloudflare chặn (Bot Fight Mode), hoặc dịch vụ không chạy | Tắt Bot Fight Mode. Kiểm tra Supervisor |
-| Không thấy nút chat trên odogcloud.com | Chưa thêm dòng `<script>`, hoặc vừa build lại theme | Mục 8 |
+| Không thấy nút chat trên odogcloud.com | Theme build khi `.env` thiếu `VITE_CHAT_WIDGET_URL` | Mục 8, build lại theme |
 | Gửi file lớn bị lỗi 413 | Nginx giới hạn dung lượng | `client_max_body_size 50m` (mục 6.3) |
 | Gửi file SVG bị từ chối | Đã chặn có chủ ý (SVG có thể chứa mã độc) | Gửi PNG hoặc JPG |
 | Nhãn online sai giờ | Sai `WORK_HOURS` | Giờ trong `config.js` là **giờ Bắc Kinh**, không phải giờ Việt Nam |
