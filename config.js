@@ -24,7 +24,7 @@ module.exports = {
         greetingTitle: "你好，很高兴为你服务",
         greetingText: "留下遇到的问题，我们一起解决。",
         footer: "O Dog Cloud · 每一条消息都认真对待",
-        buttonOpen: "联系客服",
+        buttonOpen: "在线客服",
         buttonClose: "关闭客服"
     },
 

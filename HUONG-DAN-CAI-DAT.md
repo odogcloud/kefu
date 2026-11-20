@@ -28,8 +28,8 @@ Bản này sửa từ **[lisi-123/Simplechat-system](https://github.com/lisi-123
 
 | Phần | Sửa |
 |---|---|
-| Giao diện máy tính (`public/chat-widget.js`) | Nút nổi "联系客服 / 关闭客服", khung chat bo tròn tông tím, logo ✦, nhãn **在线 / 离线**, thanh **giờ làm việc (giờ Bắc Kinh)**, lời chào khi chưa có tin, ô nhập có nút ảnh và nút "发送", dòng chữ cuối. Có chế độ tối |
-| Giao diện điện thoại (`public/chat.html`) | Cùng phong cách với bản máy tính |
+| Giao diện (`public/chat-widget.js`) | **Giống bygcloud.com** (đã được bên đó đồng ý): màu `#7851da`, nút nổi 50px "✦ 在线客服 / 关闭客服" cách phải 24px dưới 22px, khung 400×700 bo 22px, logo ✦, nhãn **在线 / 离线**, thanh **giờ Bắc Kinh**, lời chào, ô nhập có nút ảnh và nút "发送", dòng chữ cuối. Kích thước đã đo và khớp từng pixel. **Tên, logo chữ và dòng cuối là của O Dog Cloud** |
+| Điện thoại | Màn hình ≤ 600px: khung chat mở **toàn màn hình ngay trên trang** (giống bygcloud). `public/chat.html` vẫn giữ để mở trực tiếp bằng link |
 | Cấu hình (`config.js`) | Thêm `BRAND` (tên, câu chữ), `WORK_HOURS` (giờ làm việc), `AUTO_REPLY` (tin tự trả lời), `REDIS_URL` |
 | `server.js` | Thêm `/widget-config` (trả tên, giờ làm việc, trạng thái online theo giờ Bắc Kinh). Chỉ nghe ở `127.0.0.1` (đi qua Nginx) |
 | Bảo mật | Bỏ cho phép tải **SVG** (có thể chứa mã độc). File tải lên được trả kèm header chống chạy mã, file không phải ảnh hay video thì luôn **tải về**, không mở trên trình duyệt. Sửa lỗi **XSS** ở tên file trên bản máy tính |
@@ -176,18 +176,18 @@ aaPanel → **Files** → `/www/wwwroot/odogcloud.com/index.html` → **Edit** �
 ```html
 <script src="https://kf.odogcloud.com/chat-widget.js" data-chat-widget defer></script>
 ```
-Lưu lại. Tải lại `odogcloud.com` bằng **Ctrl+F5**, góc phải dưới sẽ có nút **"✦ 联系客服"**.
+Lưu lại. Tải lại `odogcloud.com` bằng **Ctrl+F5**, góc phải dưới sẽ có nút **"✦ 在线客服"**.
 
 ⚠️ **Mỗi lần build lại giao diện DK_Theme** và tải `index.html` mới lên, **phải thêm lại dòng này**. Dòng này không nằm trong mã nguồn theme, nhờ vậy theme vẫn giống tác giả.
 
-- **Máy tính:** bấm nút mở khung chat ngay trên trang.
-- **Điện thoại:** bấm nút mở trang chat riêng `kf.odogcloud.com/chat.html` toàn màn hình.
+- **Máy tính:** bấm nút mở khung chat 400×700 ở góc phải.
+- **Điện thoại:** bấm nút mở khung chat **toàn màn hình ngay trên trang**, bấm ⌄ để thu lại.
 
 ---
 
 ## 9. Kiểm tra
 
-1. Mở `odogcloud.com` (cửa sổ ẩn danh) → **联系客服** → gửi `test`.
+1. Mở `odogcloud.com` (cửa sổ ẩn danh) → **在线客服** → gửi `test`.
 2. Trong nhóm Telegram có **topic mới** (ví dụ `Win电脑-001`), có tin `test`, kèm IP và quốc gia.
 3. **Trả lời trong topic đó** → khoảng 1–2 giây sau, tin hiện trong khung chat của khách.
 4. Gửi thử một **ảnh** hai chiều (khách sang Telegram và ngược lại).

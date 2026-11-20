@@ -71,208 +71,220 @@
     <style>
         * { box-sizing: border-box; }
         :host {
-            --cw-accent: #7c4ddb; --cw-accent-2: #a274f5; --cw-accent-soft: #f6f2fe;
-            --cw-text: #1f1d2b; --cw-muted: #8a8698; --cw-line: #ece9f3; --cw-bg: #ffffff;
+            --accent: #7851da; --soft: #f6f2ff; --message: #7953d9;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
         }
-        @media (prefers-color-scheme: dark) {
-            :host { --cw-accent-soft: #241d33; --cw-text: #ece9f3; --cw-muted: #9b96ab; --cw-line: #2c2738; --cw-bg: #17141f; }
-        }
+        button { font-family: inherit; cursor: pointer; }
 
         /* 悬浮按钮 */
         .cw-btn {
-            position: fixed; right: 24px; bottom: 24px; height: 52px; padding: 0 22px 0 18px;
-            border-radius: 26px; border: none; cursor: pointer; user-select: none;
-            background: linear-gradient(135deg, var(--cw-accent-2), var(--cw-accent));
-            color: #fff; font-size: 16px; font-weight: 600; letter-spacing: .5px;
-            display: flex; align-items: center; gap: 8px;
-            box-shadow: 0 10px 28px rgba(124, 77, 219, .35); transition: transform .2s, box-shadow .2s;
+            position: fixed; right: 24px; bottom: max(22px, env(safe-area-inset-bottom)); z-index: 2147483000;
+            display: flex; align-items: center; justify-content: center; gap: 9px; min-height: 50px; padding: 12px 20px;
+            border: 0; border-radius: 28px; background: #7851da; color: #fff; font-size: 14px; font-weight: 400;
+            box-shadow: 0 6px 22px rgba(85, 52, 160, .22); user-select: none; transition: filter .15s, transform .15s;
         }
-        .cw-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(124, 77, 219, .42); }
-        .cw-btn .cw-spark { font-size: 18px; line-height: 1; }
-        @media (max-width: 480px) { .cw-btn { right: 14px; bottom: 18px; height: 46px; font-size: 15px; padding: 0 18px 0 14px; } }
+        .cw-btn:hover { filter: brightness(.96); transform: translateY(-1px); }
+        .cw-btn .cw-spark { font-size: 21px; line-height: 1; }
 
         /* 面板 */
         .cw-panel {
-            position: fixed; right: 24px; bottom: 92px; width: 380px; height: min(600px, calc(100vh - 120px));
-            background: var(--cw-bg); color: var(--cw-text); border-radius: 22px; border: 1px solid var(--cw-line);
-            box-shadow: 0 24px 60px rgba(31, 18, 64, .18); display: none; flex-direction: column; overflow: hidden;
+            position: fixed; right: 24px; bottom: 86px; z-index: 2147483001;
+            width: min(400px, calc(100vw - 32px)); height: min(700px, calc(100dvh - 110px));
+            border-radius: 22px; background: #fff; box-shadow: 0 16px 64px #3420502b;
+            display: none; color: #28243a; font-size: 14px;
+        }
+        .cw-chat {
+            position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden;
+            border: 1px solid #e9e5ef; border-radius: 22px; background: #fff; box-shadow: 0 16px 38px rgba(52, 32, 80, .043);
         }
 
         /* 头部 */
-        .cw-header { display: flex; align-items: center; gap: 10px; padding: 18px 12px 14px 16px; }
+        .cw-header { display: flex; align-items: center; gap: 10px; padding: 20px 17px 18px; border-bottom: 1px solid #f0edf6; flex-shrink: 0; }
         .cw-logo {
-            width: 46px; height: 46px; border-radius: 14px; flex-shrink: 0; color: #fff; font-size: 22px;
-            display: flex; align-items: center; justify-content: center;
-            background: linear-gradient(135deg, var(--cw-accent-2), var(--cw-accent));
-            box-shadow: 0 6px 16px rgba(124, 77, 219, .3);
+            display: grid; place-items: center; width: 40px; height: 40px; border-radius: 13px; flex: none;
+            background: linear-gradient(135deg, #9465ff, #7055e6); color: #fff; font-size: 23px; box-shadow: 0 5px 12px #8358e327;
         }
         .cw-title { flex: 1; min-width: 0; }
-        .cw-title-row { display: flex; align-items: center; gap: 8px; }
-        .cw-name { font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .cw-name { font-size: 16px; font-weight: 650; margin: 0 0 4px; color: #28243a; line-height: 24px; height: 24px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .cw-status {
-            display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 999px;
-            font-size: 12px; color: var(--cw-muted); background: var(--cw-accent-soft); border: 1px solid var(--cw-line); flex-shrink: 0;
+            display: inline-flex; vertical-align: middle; align-items: center; gap: 4px; margin-left: 5px; padding: 2px 7px;
+            border-radius: 12px; font-size: 11px; font-weight: 500; line-height: 16px; color: #667085; background: #f2f4f7; border: 1px solid #e4e7ec;
         }
-        .cw-status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #9aa0ab; }
-        .cw-status.online { color: #15803d; }
-        .cw-status.online::before { background: #22c55e; }
-        .cw-sub { font-size: 13px; color: var(--cw-muted); margin-top: 3px; }
+        .cw-status::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+        .cw-status.online { color: #07805c; background: #ecfdf3; border-color: #abefc6; }
+        .cw-sub { font-size: 12px; color: #7b7087; margin: 0; }
         .cw-icon-btn {
-            width: 28px; height: 28px; border-radius: 50%; border: none; background: transparent; color: var(--cw-muted); flex-shrink: 0;
-            display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px;
+            width: 24px; height: 34px; padding: 2px; border: 0; background: transparent; color: #9b90a8;
+            display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; flex: none;
         }
-        .cw-icon-btn:hover { background: var(--cw-accent-soft); color: var(--cw-accent); }
-        .cw-close { font-size: 20px; }
+        .cw-icon-btn svg { width: 20px; height: 20px; display: block; }
+        .cw-icon-btn:hover { color: var(--accent); }
 
         /* 工作时间条 */
         .cw-hours {
-            display: flex; align-items: center; justify-content: space-between; gap: 8px;
-            padding: 9px 18px; background: var(--cw-accent-soft); border-top: 1px solid var(--cw-line);
-            font-size: 12.5px; color: var(--cw-accent);
+            display: flex; align-items: center; gap: 6px; margin: 0; padding: 10px 18px; font-size: 11px; line-height: 1.6;
+            color: #755893; background: #fbf9fe; flex: none;
         }
-        .cw-hours b { font-weight: 600; }
-        .cw-hours-right { color: var(--cw-accent); white-space: nowrap; }
+        .cw-hours .cw-clock { font-size: 16px; line-height: 1; }
+        .cw-hours strong { font-weight: 500; font-size: 11px; color: #755893; }
+        .cw-hours-tail { margin-left: auto; white-space: nowrap; }
 
         /* 消息区 */
-        .cw-body { position: relative; flex: 1; min-height: 0; display: flex; }
-        .cw-msgs { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; }
-        .cw-empty {
-            position: absolute; left: 0; right: 0; top: 34px; text-align: center; pointer-events: none; padding: 0 20px;
+        .cw-msgs {
+            padding: 22px 18px 14px; overflow-y: auto; flex: 1; min-height: 0; display: flex; flex-direction: column;
+            scrollbar-width: thin; scrollbar-color: #eee7f5 transparent; overscroll-behavior: contain;
         }
+        .cw-empty { text-align: center; padding: 4px 0 24px; flex: none; order: -1; }
         .cw-empty.hide { display: none; }
-        .cw-empty-title { font-size: 15px; font-weight: 700; color: var(--cw-text); opacity: .8; }
-        .cw-empty-text { font-size: 13.5px; color: var(--cw-muted); margin-top: 6px; }
+        .cw-empty-title { font-size: 13px; font-weight: 550; color: #675975; margin: 0 0 7px; }
+        .cw-empty-text { font-size: 12px; color: #7b7087; margin: 0; line-height: 1.6; }
 
-        .cw-msg-row { display: flex; margin: 8px 0; align-items: flex-end; gap: 8px; }
-        .cw-msg-row.user { flex-direction: row-reverse; }
+        .cw-msg-row { display: flex; flex-direction: column; align-items: flex-start; margin-bottom: 18px; gap: 6px; }
+        .cw-msg-row.user { align-items: flex-end; }
         .cw-avatar {
-            width: 30px; height: 30px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center;
-            justify-content: center; font-size: 11px; color: #fff;
+            width: 17px; height: 17px; border-radius: 6px; background: #eee6fb; display: grid; place-items: center;
+            color: var(--accent); font-size: 0; flex: none;
         }
-        .cw-avatar.user { background: #c9c3d9; }
-        .cw-avatar.agent { background: linear-gradient(135deg, var(--cw-accent-2), var(--cw-accent)); }
-        .cw-bubble { max-width: 74%; padding: 9px 13px; border-radius: 16px; font-size: 14px; line-height: 1.55; word-break: break-word; white-space: pre-wrap; }
-        .cw-bubble.user { background: linear-gradient(135deg, var(--cw-accent-2), var(--cw-accent)); color: #fff; border-bottom-right-radius: 5px; }
-        .cw-bubble.agent { background: var(--cw-accent-soft); color: var(--cw-text); border-bottom-left-radius: 5px; }
+        .cw-avatar.agent::after { content: "✦"; font-size: 11px; }
+        .cw-avatar.user { display: none; }
+        .cw-bubble {
+            max-width: 93%; padding: 11px 13px; background: #f4f2f7; color: #51475f; border-radius: 4px 15px 15px 15px;
+            font-size: 14px; line-height: 1.7; overflow-wrap: anywhere; white-space: pre-wrap;
+        }
+        .cw-bubble.user { background: var(--message); color: #fff; border-radius: 15px 4px 15px 15px; }
+        .cw-bubble.agent { background: #f4f2f7; color: #51475f; }
 
-        .cw-file-msg { max-width: 74%; }
-        .cw-file-card { background: var(--cw-bg); border: 1px solid var(--cw-line); border-radius: 14px; overflow: hidden; }
-        .cw-file-image { width: 100%; max-height: 190px; object-fit: cover; cursor: pointer; display: block; }
-        .cw-file-video { width: 100%; max-height: 190px; display: block; }
-        .cw-file-doc { display: flex; align-items: center; gap: 8px; padding: 10px; cursor: pointer; }
-        .cw-file-doc-icon { font-size: 30px; }
+        .cw-file-msg { width: 220px; max-width: 88%; }
+        .cw-file-card { padding: 5px; background: #f4f2f7; border-radius: 15px; overflow: hidden; }
+        .cw-msg-row.user .cw-file-card { background: var(--message); }
+        .cw-file-image { display: block; width: 100%; max-height: 220px; object-fit: contain; border-radius: 10px; cursor: zoom-in; min-width: 80px; }
+        .cw-file-video { display: block; width: 100%; max-height: 220px; border-radius: 10px; }
+        .cw-file-doc { display: flex; align-items: center; gap: 8px; padding: 8px; cursor: pointer; background: #fff; border-radius: 10px; }
+        .cw-file-doc-icon { font-size: 28px; }
         .cw-file-doc-info { flex: 1; min-width: 0; }
-        .cw-file-doc-name { font-size: 12.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .cw-file-doc-size { font-size: 11px; color: var(--cw-muted); margin-top: 2px; }
-        .cw-file-doc-action { color: var(--cw-accent); font-size: 12px; }
+        .cw-file-doc-name { font-size: 12px; font-weight: 500; color: #51475f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .cw-file-doc-size { font-size: 11px; color: #887a95; margin-top: 2px; }
+        .cw-file-doc-action { color: var(--accent); font-size: 11px; }
 
-        .cw-load-more { width: 100%; text-align: center; padding: 4px 0 8px; flex-shrink: 0; }
-        .cw-load-more button {
-            background: var(--cw-accent-soft); border: none; border-radius: 12px; padding: 5px 14px;
-            font-size: 12px; cursor: pointer; color: var(--cw-accent);
-        }
+        .cw-load-more { width: 100%; text-align: center; padding: 0 0 10px; flex-shrink: 0; order: -2; }
+        .cw-load-more button { background: var(--soft); border: 0; border-radius: 10px; padding: 5px 14px; font-size: 11px; color: var(--accent); }
         .cw-load-more button:disabled { opacity: .5; cursor: default; }
 
         /* 输入区 */
-        .cw-input-area { padding: 10px 16px 6px; position: relative; }
+        .cw-input-area { position: relative; flex: none; }
         .cw-composer {
-            border: 1.5px solid #d9ccf6; border-radius: 18px; padding: 10px 12px 10px 14px; background: var(--cw-bg);
-            transition: border-color .2s, box-shadow .2s;
+            margin: 0 14px; padding: 11px 10px 8px; border: 1px solid #e8e0f2; border-radius: 14px; background: #fff;
+            box-shadow: 0 3px 12px #744c8d04;
         }
-        .cw-composer:focus-within { border-color: var(--cw-accent); box-shadow: 0 0 0 4px rgba(124, 77, 219, .1); }
-        .cw-composer input[type=text] {
-            width: 100%; border: none; outline: none; background: transparent; color: var(--cw-text);
-            font-size: 14.5px; padding: 4px 2px 12px; font-family: inherit;
+        .cw-composer textarea {
+            display: block; width: 100%; height: 36px; border: 0; outline: none; resize: none; background: transparent;
+            color: #4d405c; font-size: 13px; padding: 2px 3px; font-family: inherit; line-height: 1.5; margin: 0 0 2px;
         }
-        .cw-composer input[type=text]::placeholder { color: #b4afc2; }
-        .cw-composer input:disabled { opacity: .5; }
-        .cw-tools { display: flex; align-items: center; gap: 10px; }
+        .cw-composer textarea::placeholder { color: #afa4ba; }
+        .cw-composer textarea:disabled { opacity: .5; }
+        .cw-tools { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+        .cw-tools > div { display: flex; align-items: center; min-width: 0; gap: 5px; }
         .cw-attach-btn {
-            width: 32px; height: 32px; border: none; background: transparent; cursor: pointer; color: var(--cw-muted);
-            display: flex; align-items: center; justify-content: center; border-radius: 9px; flex-shrink: 0;
+            width: 30px; height: 34px; border: 0; background: transparent; color: #9b90a8; display: inline-flex;
+            align-items: center; justify-content: center; border-radius: 8px; padding: 5px; flex: none;
         }
-        .cw-attach-btn:hover { background: var(--cw-accent-soft); color: var(--cw-accent); }
-        .cw-attach-btn svg { width: 22px; height: 22px; }
-        .cw-hint { flex: 1; font-size: 12px; color: #b4afc2; }
+        .cw-attach-btn svg { width: 20px; height: 20px; display: block; }
+        .cw-attach-btn:hover { color: var(--accent); }
+        .cw-hint { font-size: 10px; color: #b2a6ba; white-space: nowrap; }
         .cw-send-btn {
-            border: none; cursor: pointer; color: #fff; font-size: 14.5px; font-weight: 600; flex-shrink: 0;
-            padding: 8px 16px; border-radius: 12px; display: flex; align-items: center; gap: 6px;
-            background: linear-gradient(135deg, var(--cw-accent-2), var(--cw-accent));
+            border: 0; display: flex; gap: 6px; align-items: center; justify-content: center; padding: 8px 11px;
+            border-radius: 10px; background: var(--accent); color: #fff; font-size: 11px; flex: none; min-width: 66px;
         }
+        .cw-send-btn:hover { filter: brightness(.95); }
         .cw-send-btn svg { width: 16px; height: 16px; }
         .cw-send-btn:disabled { opacity: .45; cursor: not-allowed; }
-        .cw-footer { text-align: center; font-size: 11.5px; color: var(--cw-muted); padding: 8px 0 12px; }
+        .cw-footer { text-align: center; font-size: 10px; color: #91839f; padding: 12px 8px 15px; flex: none; }
 
-        .cw-file-preview { display: none; padding: 6px 10px; background: var(--cw-accent-soft); border-radius: 10px; margin-bottom: 8px; align-items: center; gap: 6px; font-size: 12px; }
+        .cw-file-preview { display: none; margin: 0 14px 8px; padding: 6px 10px; background: var(--soft); border-radius: 10px; align-items: center; gap: 6px; font-size: 12px; color: #51475f; }
         .cw-file-preview.show { display: flex; }
-        .cw-file-preview-remove { cursor: pointer; color: var(--cw-muted); background: none; border: none; margin-left: auto; }
+        .cw-file-preview-remove { color: #9b90a8; background: none; border: none; margin-left: auto; }
 
-        .cw-upload-progress { position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: var(--cw-accent); display: none; }
+        .cw-upload-progress { position: absolute; bottom: 0; left: 14px; right: 14px; height: 3px; border-radius: 2px; background: var(--accent); display: none; }
         .cw-upload-progress.show { display: block; }
         .cw-drop-overlay {
-            display: none; position: absolute; inset: 0; background: rgba(54, 30, 110, .88); z-index: 10;
+            display: none; position: absolute; inset: 0; background: rgba(60, 36, 120, .86); z-index: 10; border-radius: inherit;
             align-items: center; justify-content: center; flex-direction: column; gap: 12px; color: #fff; font-size: 14px;
         }
         .cw-drop-overlay.show { display: flex; }
         .cw-uploading-overlay { display: none; position: absolute; inset: 0; background: rgba(255,255,255,.7); z-index: 11; align-items: center; justify-content: center; }
         .cw-uploading-overlay.show { display: flex; }
-        .cw-spinner { width: 30px; height: 30px; border: 3px solid #e6defa; border-top-color: var(--cw-accent); border-radius: 50%; animation: cw-spin 1s linear infinite; }
+        .cw-spinner { width: 30px; height: 30px; border: 3px solid #eee6fb; border-top-color: var(--accent); border-radius: 50%; animation: cw-spin 1s linear infinite; }
         @keyframes cw-spin { to { transform: rotate(360deg); } }
         .cw-error-toast {
-            position: fixed; top: 20px; right: 20px; background: #e5484d; color: #fff; padding: 12px 20px;
-            border-radius: 10px; font-size: 13px; z-index: 1000000; box-shadow: 0 4px 12px rgba(0,0,0,.2);
+            position: fixed; top: 20px; right: 20px; background: #b25739; color: #fff; padding: 10px 16px;
+            border-radius: 10px; font-size: 13px; z-index: 2147483002; box-shadow: 0 4px 12px rgba(0,0,0,.2);
         }
+
+        /* 手机：按钮靠边，面板全屏 */
+        @media (max-width: 600px) {
+            .cw-btn { right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); }
+            .cw-panel { inset: 0; width: 100%; height: 100%; height: 100dvh; border-radius: 0; }
+            .cw-chat { border-radius: 0; border: 0; padding-top: env(safe-area-inset-top); }
+            .cw-header { padding-left: 15px; padding-right: 15px; }
+            .cw-footer { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+        }
+        @media (prefers-reduced-motion: reduce) { .cw-btn { transition: none; } }
     </style>
 
-    <button class="cw-btn" type="button"><span class="cw-spark">✦</span><span class="cw-btn-text">联系客服</span></button>
+    <button class="cw-btn" type="button"><span class="cw-spark" aria-hidden="true">✦</span><span class="cw-btn-text">在线客服</span></button>
     <div class="cw-panel" role="dialog" aria-label="在线客服">
-        <div class="cw-header">
-            <div class="cw-logo">✦</div>
-            <div class="cw-title">
-                <div class="cw-title-row"><span class="cw-name">在线客服</span><span class="cw-status">离线</span></div>
-                <div class="cw-sub"></div>
+        <div class="cw-chat">
+            <div class="cw-header">
+                <div class="cw-logo">✦</div>
+                <div class="cw-title">
+                    <div class="cw-name"><span class="cw-name-text">在线客服</span><span class="cw-status">离线</span></div>
+                    <p class="cw-sub"></p>
+                </div>
+                <button class="cw-icon-btn cw-info" type="button" title="">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg>
+                </button>
+                <button class="cw-icon-btn cw-close" type="button" title="收起">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10l5 5 5-5"/></svg>
+                </button>
             </div>
-            <button class="cw-icon-btn cw-info" type="button" title="">ⓘ</button>
-            <button class="cw-icon-btn cw-close" type="button" title="收起">⌄</button>
-        </div>
-        <div class="cw-hours"><span>🕒 <b class="cw-hours-text"></b></span><span class="cw-hours-right">人工客服</span></div>
-        <div class="cw-body">
+            <div class="cw-hours"><span class="cw-clock">◷</span><span class="cw-hours-pre"></span><strong class="cw-hours-text"></strong><span class="cw-hours-tail">人工客服</span></div>
             <div class="cw-msgs">
                 <div class="cw-load-more">
-                    <button class="cw-load-more-btn">加载更早消息</button>
+                    <button class="cw-load-more-btn" type="button">加载更早消息</button>
                 </div>
+                <div class="cw-empty"><div class="cw-empty-title"></div><div class="cw-empty-text"></div></div>
             </div>
-            <div class="cw-empty"><div class="cw-empty-title"></div><div class="cw-empty-text"></div></div>
-        </div>
-        <div class="cw-input-area">
-            <div class="cw-file-preview">
-                <span class="cw-file-preview-icon">📎</span>
-                <div class="cw-file-preview-info">
-                    <div class="cw-file-preview-name"></div>
-                    <div class="cw-file-preview-size"></div>
+            <div class="cw-input-area">
+                <div class="cw-file-preview">
+                    <span class="cw-file-preview-icon">📎</span>
+                    <div class="cw-file-preview-info">
+                        <div class="cw-file-preview-name"></div>
+                        <div class="cw-file-preview-size"></div>
+                    </div>
+                    <button class="cw-file-preview-remove" type="button">✕</button>
                 </div>
-                <button class="cw-file-preview-remove" type="button">✕</button>
-            </div>
-            <div class="cw-composer">
-                <input type="text" placeholder="输入消息..." />
-                <div class="cw-tools">
-                    <button class="cw-attach-btn" type="button" title="发送图片或文件">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="M21 15l-5-5L5 21"/></svg>
-                    </button>
-                    <span class="cw-hint">支持文字和图片</span>
-                    <button class="cw-send-btn" type="button">发送
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-                    </button>
+                <div class="cw-composer">
+                    <textarea class="cw-textarea" rows="2" placeholder="输入消息..."></textarea>
+                    <div class="cw-tools">
+                        <div>
+                            <button class="cw-attach-btn" type="button" title="发送图片或文件">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><circle cx="9" cy="9" r="1.5"/><path d="M20.5 15.5l-4.5-4.5-9.5 9.5"/></svg>
+                            </button>
+                            <span class="cw-hint">支持文字和图片</span>
+                        </div>
+                        <button class="cw-send-btn" type="button"><span>发送</span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3L10 14"/><path d="M21 3l-7 18-4-7-7-4 18-7z"/></svg>
+                        </button>
+                    </div>
                 </div>
+                <div class="cw-upload-progress"></div>
             </div>
-            <div class="cw-upload-progress"></div>
+            <div class="cw-footer"></div>
+            <div class="cw-drop-overlay">
+                <span class="cw-drop-overlay-icon">📤</span><span>释放文件以上传</span>
+            </div>
+            <div class="cw-uploading-overlay"><div class="cw-spinner"></div></div>
         </div>
-        <div class="cw-footer"></div>
-        <div class="cw-drop-overlay">
-            <span class="cw-drop-overlay-icon">📤</span><span>释放文件以上传</span>
-        </div>
-        <div class="cw-uploading-overlay"><div class="cw-spinner"></div></div>
         <input type="file" style="display: none;" accept=".jpg,.jpeg,.png,.gif,.webp,.bmp,.mp4,.webm,.ogg,.mov,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar,.7z" />
     </div>
     `;
@@ -284,7 +296,7 @@
     const panel = shadow.querySelector(".cw-panel");
     const msgsContainer = shadow.querySelector(".cw-msgs");
     const loadMoreBtn = shadow.querySelector(".cw-load-more-btn");
-    const input = shadow.querySelector("input[type='text']");
+    const input = shadow.querySelector(".cw-textarea");
     const sendBtn = shadow.querySelector(".cw-send-btn");
     const attachBtn = shadow.querySelector(".cw-attach-btn");
     const fileInput = shadow.querySelector("input[type='file']");
@@ -298,7 +310,7 @@
     // O Dog Cloud 修改：新界面元素
     const btnText = shadow.querySelector(".cw-btn-text");
     const emptyState = shadow.querySelector(".cw-empty");
-    let BRAND = { buttonOpen: "联系客服", buttonClose: "关闭客服" };
+    let BRAND = { buttonOpen: "在线客服", buttonClose: "关闭客服" };
 
     function escapeHtml(str) {
         return String(str).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -316,12 +328,15 @@
             const r = await fetch(API + "/widget-config", { cache: "no-store" });
             const c = await r.json();
             BRAND = Object.assign(BRAND, c.brand || {});
-            shadow.querySelector(".cw-name").textContent = BRAND.name || "在线客服";
+            shadow.querySelector(".cw-name-text").textContent = BRAND.name || "在线客服";
             shadow.querySelector(".cw-sub").textContent = BRAND.subtitle || "";
             shadow.querySelector(".cw-empty-title").textContent = BRAND.greetingTitle || "";
             shadow.querySelector(".cw-empty-text").textContent = BRAND.greetingText || "";
             shadow.querySelector(".cw-footer").textContent = BRAND.footer || "";
-            shadow.querySelector(".cw-hours-text").textContent = c.hours || "";
+            const hrs = String(c.hours || "");
+            const sp = hrs.indexOf(" ");
+            shadow.querySelector(".cw-hours-pre").textContent = sp > 0 ? hrs.slice(0, sp) : "";
+            shadow.querySelector(".cw-hours-text").textContent = sp > 0 ? hrs.slice(sp + 1) : hrs;
             shadow.querySelector(".cw-info").title = c.hours ? ("工作时间：" + c.hours) : "";
             const st = shadow.querySelector(".cw-status");
             st.textContent = c.online ? "在线" : "离线";
@@ -943,11 +958,6 @@
     }
 
     btn.onclick = () => {
-        // 移动端：打开独立聊天页面
-        if (isMobileDevice()) {
-            window.open(`${API}/chat.html`, "_blank");
-            return;
-        }
         setOpen(!open);
     };
 
@@ -957,36 +967,10 @@
     };
 
     // =========================
-    // 13. 移动端键盘适配（弹窗已废弃，保留以防直接嵌入使用）
-    // =========================
-    if (/Mobi|Android/i.test(navigator.userAgent)) {
-        const defaultBottomPadding = 40;
-        panel.style.paddingBottom = defaultBottomPadding + "px";
-
-        if (window.visualViewport) {
-            window.visualViewport.addEventListener("resize", () => {
-                const heightDiff = window.innerHeight - window.visualViewport.height;
-                panel.style.paddingBottom = heightDiff > 50 ? "0px" : defaultBottomPadding + "px";
-            });
-        } else {
-            window.addEventListener("resize", () => {
-                const heightDiff = window.screen.height - window.innerHeight;
-                panel.style.paddingBottom = heightDiff > 150 ? "0px" : defaultBottomPadding + "px";
-            });
-        }
-    }
-
-    // =========================
     // 14. 启动流程
     // =========================
     (async () => {
         loadWidgetConfig();
-        // 移动端无需加载弹窗资源，直接显示按钮
-        if (isMobileDevice()) {
-            scheduleShrink();
-            return;
-        }
-
         await initSession();
 
         if (sid && token) {

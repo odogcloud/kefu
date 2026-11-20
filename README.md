@@ -1,6 +1,6 @@
 # O Dog Cloud 客服 (kefu)
 
-> Bản sửa của [lisi-123/Simplechat-system](https://github.com/lisi-123/Simplechat-system) (MIT) cho **odogcloud.com**: giao diện mới tông tím, giờ làm việc theo giờ Bắc Kinh, Redis database riêng, sửa lỗi bảo mật.
+> Bản sửa của [lisi-123/Simplechat-system](https://github.com/lisi-123/Simplechat-system) (MIT) cho **odogcloud.com**: giao diện giống bygcloud.com (màu #7851da, khớp kích thước), giờ làm việc theo giờ Bắc Kinh, Redis database riêng, sửa lỗi bảo mật.
 >
 > 👉 **Hướng dẫn cài đặt (tiếng Việt): [HUONG-DAN-CAI-DAT.md](HUONG-DAN-CAI-DAT.md)**. Phần bên dưới là README gốc của tác giả.
 
