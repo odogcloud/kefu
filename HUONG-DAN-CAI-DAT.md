@@ -23,6 +23,7 @@ Bản này sửa từ **[lisi-123/Simplechat-system](https://github.com/lisi-123
 9. [Kiểm tra](#9-kiểm-tra)
 10. [Vận hành, cập nhật](#10-vận-hành-cập-nhật)
 11. [Bảng tra lỗi](#11-bảng-tra-lỗi)
+12. [Cách 2: cài bằng lệnh + Supervisor (không dùng Node.js Project của aaPanel)](#12-cách-2-cài-bằng-lệnh--supervisor)
 
 ---
 
@@ -75,6 +76,8 @@ Kết quả `{"ok":true,"result":{"message_thread_id":35,...}}` → số đó l�
 ---
 
 ## 2. Cài Node.js bằng aaPanel
+
+> Có **2 cách** chạy khung chat. Mục 2, 5, 6 dưới đây là **Cách 1: aaPanel Node.js Project** (đang dùng, có giao diện quản lý). **Cách 2: lệnh + Supervisor** (giống Webman và Horizon) nằm ở **mục 12**. Các mục 1, 3, 4, 7–11 dùng chung cho cả hai cách.
 
 Cài trên **VPS website** (VPS có V2Board): khung chat rất nhẹ và dùng Redis có sẵn ở đó.
 
@@ -136,6 +139,8 @@ cd /www/wwwroot/kefu && chown -R www:www . && (timeout 6 sudo -u www node server
 ---
 
 ## 5. Tạo Node.js Project trên aaPanel
+
+*(Cách 1. Dùng cách 2 thì xem mục 12.)*
 
 **Cloudflare trước** (zone `odogcloud.com`): **DNS → Add record** → `A`, Name `kf`, IP VPS website, **DNS only** (tạm thời, để xin SSL).
 
@@ -248,3 +253,71 @@ Trang khác (không dùng DK_Theme) muốn có khung chat thì thêm dòng này 
 | `node: command not found` | Node cài qua aaPanel chưa có trong đường dẫn | Lệnh `ln -sf` ở mục 2 |
 | `npm warn deprecated multer@1.x` | Bản code cũ | `git pull` lấy bản dùng multer 2.x |
 | Nhãn online sai giờ | Sai `WORK_HOURS` | Giờ trong `config.js` là **giờ Bắc Kinh**, không phải giờ Việt Nam |
+
+---
+
+## 12. Cách 2: cài bằng lệnh + Supervisor
+
+Dùng khi **không muốn** quản lý bằng trang Node.js Project của aaPanel. Chạy giống Webman và Horizon: quản lý ở **aaPanel → Supervisor**, Node.js cài chuẩn ở `/usr/bin/node`. Chọn **một trong hai cách**, không chạy cả hai cùng lúc (sẽ tranh cổng 3000).
+
+**12.1. Cài Node.js 24** (thay cho mục 2):
+```bash
+curl -fsSL https://deb.nodesource.com/setup_24.x | bash - && apt install -y nodejs && node -v && which node
+```
+Đúng là ra `v24.x.x` và `/usr/bin/node`. Không dùng `apt install nodejs` có sẵn của Ubuntu, vì bản đó cũ và thiếu `npm`.
+
+**12.2. Tải code, điền `config.js`, chạy thử:** làm giống **mục 3 và 4**.
+
+**12.3. Chạy bằng Supervisor** (thay cho mục 5). aaPanel → **App Store → Supervisor → Add Daemon**:
+
+| Ô | Điền |
+|---|---|
+| Name | `kefu` |
+| Run User | `www` |
+| Run Dir | `/www/wwwroot/kefu` |
+| Start Command | `/usr/bin/node server.js` |
+| Processes | `1` |
+
+Kiểm tra:
+```bash
+/www/server/panel/pyenv/bin/supervisorctl -c /etc/supervisor/supervisord.conf status kefu:*; curl -s http://127.0.0.1:3000/widget-config | head -c 80; echo
+```
+Đúng là thấy `RUNNING` và đoạn JSON có `"brand"`.
+
+**12.4. Tên miền và SSL** (thay cho mục 6):
+1. Cloudflare: bản ghi **A `kf`** → IP VPS website, **DNS only** (tạm thời).
+2. aaPanel → **Website → Add site** → domain `kf.odogcloud.com`, PHP **Static** → **SSL → Let's Encrypt** → **Apply** → bật **Force HTTPS**.
+3. **URL rewrite** của site `kf.odogcloud.com`, xóa hết rồi dán:
+   ```nginx
+   client_max_body_size 50m;
+
+   location / {
+       proxy_pass http://127.0.0.1:3000;
+       proxy_http_version 1.1;
+       proxy_set_header Host $host;
+       proxy_set_header X-Real-IP $remote_addr;
+       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+       proxy_set_header X-Forwarded-Proto https;
+       proxy_read_timeout 60s;
+   }
+   ```
+   Nếu aaPanel báo trùng `client_max_body_size` thì xóa dòng đó (aaPanel mặc định đã là 50m).
+4. Cloudflare → bật **Proxied** cho `kf`. SSL/TLS vẫn **Full (Strict)**.
+
+**12.5. Webhook:** làm giống **mục 7**.
+
+**12.6. Vận hành theo cách 2:**
+- Khởi động lại sau khi sửa `config.js`:
+  ```bash
+  /www/server/panel/pyenv/bin/supervisorctl -c /etc/supervisor/supervisord.conf restart kefu:*
+  ```
+- Xem log: aaPanel → **Supervisor** → `kefu` → **Log**.
+- Cập nhật code:
+  ```bash
+  cd /www/wwwroot/kefu && cp config.js /root/kefu-config.js.bak && git stash && git pull && git stash pop && npm install --omit=dev && chown -R www:www . && /www/server/panel/pyenv/bin/supervisorctl -c /etc/supervisor/supervisord.conf restart kefu:*
+  ```
+
+**12.7. Chuyển từ cách 1 sang cách 2** (hoặc ngược lại):
+1. Dừng và xóa cách đang chạy. Với cách 1: Node.js Project → `kefu` → **Stop** → **Delete**, **không** tích xóa thư mục code. Với cách 2: Supervisor → `kefu` → **Delete**.
+2. Làm theo cách mới. Thư mục `/www/wwwroot/kefu` và `config.js` **giữ nguyên**, không cần điền lại.
+3. Webhook Telegram **không cần đặt lại**, vì tên miền không đổi.
