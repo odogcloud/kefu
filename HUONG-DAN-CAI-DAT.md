@@ -4,6 +4,8 @@ Khách chat ở góc trang `odogcloud.com`. Mỗi khách thành **một topic** 
 
 Bản này sửa từ **[lisi-123/Simplechat-system](https://github.com/lisi-123/Simplechat-system)** (MIT). Toàn bộ lịch sử commit của tác giả vẫn còn trong repo này. Thư mục làm việc trên máy tính: `D:\O Dog Cloud\feku` (remote `origin` là `odogcloud/kefu`, `upstream` là repo gốc).
 
+> ✅ **Đã cài và chạy thử thành công ngày 20/11/2026**: khách gửi chữ và ảnh tới Telegram, trả lời trên Telegram hiện lại cho khách.
+>
 > 🔒 Không commit `config.js` có **Bot Token**, **Chat ID** hay **Webhook Secret** thật lên GitHub. Các giá trị đó chỉ điền **trên VPS**.
 
 ---
@@ -11,11 +13,11 @@ Bản này sửa từ **[lisi-123/Simplechat-system](https://github.com/lisi-123
 ## Mục lục
 0. [Đã sửa gì so với bản gốc](#0-đã-sửa-gì-so-với-bản-gốc)
 1. [Chuẩn bị Telegram](#1-chuẩn-bị-telegram)
-2. [Cài Node.js trên VPS](#2-cài-nodejs-trên-vps)
+2. [Cài Node.js bằng aaPanel](#2-cài-nodejs-bằng-aapanel)
 3. [Tải code và cài thư viện](#3-tải-code-và-cài-thư-viện)
 4. [Sửa `config.js`](#4-sửa-configjs)
-5. [Chạy bằng Supervisor](#5-chạy-bằng-supervisor)
-6. [Tên miền, Cloudflare, aaPanel](#6-tên-miền-cloudflare-aapanel)
+5. [Tạo Node.js Project trên aaPanel](#5-tạo-nodejs-project-trên-aapanel)
+6. [SSL và Cloudflare](#6-ssl-và-cloudflare)
 7. [Nối webhook Telegram](#7-nối-webhook-telegram)
 8. [Gắn khung chat vào odogcloud.com](#8-gắn-khung-chat-vào-odogcloudcom)
 9. [Kiểm tra](#9-kiểm-tra)
@@ -54,117 +56,132 @@ Bản này sửa từ **[lisi-123/Simplechat-system](https://github.com/lisi-123
 2. Mở `https://api.telegram.org/botTOKEN/getUpdates` (thay `TOKEN` bằng token thật, viết liền).
 3. Tìm `"chat":{"id":-100xxxxxxxxxx` → số **âm**, bắt đầu bằng `-100`, chính là **CHAT_ID**.
 
-**1.4. Tạo topic giám sát** (nhận cảnh báo khi có IP spam):
-1. Trong nhóm tạo topic tên `监控`, gửi một tin trong topic đó.
-2. Tải lại trang `getUpdates`, tìm `"message_thread_id": 123` → đó là **MONITOR_TOPIC_ID**.
+**1.4. Tạo topic giám sát** (nhận cảnh báo khi có IP spam). Cách dễ nhất là **cho bot tự tạo**, mở link sau trên trình duyệt (thay `TOKEN` và `CHATID`):
+```
+https://api.telegram.org/botTOKEN/createForumTopic?chat_id=CHATID&name=监控
+```
+Kết quả `{"ok":true,"result":{"message_thread_id":35,...}}` → số đó là **MONITOR_TOPIC_ID**. Báo `not enough rights` nghĩa là bot chưa có quyền **Manage Topics**.
+
+**Quyền admin của bot nên đặt:**
+
+| Quyền | Để |
+|---|---|
+| Manage topics | **Bật** (bắt buộc) |
+| Delete Messages | **Bật** (để xóa topic cũ) |
+| Add New Admins, Remain Anonymous | Tắt |
+
+Đang dùng: nhóm **O DOG CLOUD SUPPORT**, bot **@ODOGCLOUD_BOT**, topic `监控` id **35**.
 
 ---
 
-## 2. Cài Node.js trên VPS
+## 2. Cài Node.js bằng aaPanel
 
-Cài trên **VPS website** (VPS có V2Board): khung chat rất nhẹ và cần Redis có sẵn ở đó.
+Cài trên **VPS website** (VPS có V2Board): khung chat rất nhẹ và dùng Redis có sẵn ở đó.
+
+1. aaPanel → **Website → Node.js Project** → bấm **Install** (Node version manager).
+2. **Node version manager** → cài bản **v24** mới nhất (đang dùng **v24.22.3**). **Không dùng v20**: đã hết hỗ trợ từ 30/04/2026.
+3. Ô **Command line ver** → chọn v24.22.3.
+
+aaPanel cài Node ở `/www/server/nodejs/v24.22.3/bin/`. Nếu Terminal vẫn báo `node: command not found` thì tạo đường dẫn:
 ```bash
-curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && apt install -y nodejs && node -v
+ln -sf /www/server/nodejs/v24.22.3/bin/node /usr/local/bin/node && ln -sf /www/server/nodejs/v24.22.3/bin/npm /usr/local/bin/npm && ln -sf /www/server/nodejs/v24.22.3/bin/npx /usr/local/bin/npx && hash -r && node -v
 ```
-Đúng là ra `v20.x.x`.
 
 ---
 
 ## 3. Tải code và cài thư viện
 
+Repo `odogcloud/kefu` để **Public** (không chứa bí mật), nên clone không cần đăng nhập:
 ```bash
-cd /www/wwwroot && git clone https://github.com/odogcloud/kefu.git kefu && cd kefu && npm install --omit=dev
+cd /www/wwwroot && git clone https://github.com/odogcloud/kefu.git kefu && cd kefu && npm install --omit=dev && npm ls multer
 ```
+Dòng cuối phải ra `multer@2.x`. Các dòng `npm warn ... --init.module` là cảnh báo cấu hình npm của aaPanel, bỏ qua.
 
 ---
 
-## 4. Sửa `config.js`
+## 4. Điền `config.js`
 
+**4.1. Chat ID, topic, tên miền, Webhook Secret** (thay Chat ID và topic nếu khác):
 ```bash
-nano /www/wwwroot/kefu/config.js
+cd /www/wwwroot/kefu && sed -i 's|"YOUR_CHAT_ID"|"-1004396709585"|; s|"YOUR_MONITOR_TOPIC_ID"|"35"|; s|DOMAIN: ""|DOMAIN: "kf.odogcloud.com"|' config.js && SECRET=$(openssl rand -hex 24) && sed -i "s|\"YOUR_WEBHOOK_SECRET\"|\"$SECRET\"|" config.js && echo "Da tao WEBHOOK_SECRET"
 ```
 
-| Dòng | Điền |
+**4.2. Bot Token** (dán token rồi Enter, màn hình không hiện token). Lệnh ghi đè cả khi token đang trống hoặc sai:
+```bash
+cd /www/wwwroot/kefu && read -rsp "Dan Bot Token roi Enter: " T && echo && sed -i "s|BOT_TOKEN: \"[^\"]*\"|BOT_TOKEN: \"$T\"|" config.js && unset T && echo "Da dien token"
+```
+
+**4.3. Kiểm tra** (không in token ra):
+```bash
+cd /www/wwwroot/kefu && grep -nE 'CHAT_ID|MONITOR_TOPIC_ID|DOMAIN|REDIS_URL|PORT' config.js && echo "Con thieu: $(grep -c 'YOUR_' config.js)" && echo "Do dai token: $(grep -oP 'BOT_TOKEN: "\K[^"]*' config.js | tr -d '\n' | wc -c)" && curl -s "https://api.telegram.org/bot$(grep -oP 'BOT_TOKEN: "\K[^"]+' config.js)/getMe" | grep -oE '"(ok|username)":[^,}]*'; chown -R www:www /www/wwwroot/kefu
+```
+Đúng là: `Con thieu: 0`, độ dài token khoảng 46, `"ok":true` và đúng username bot.
+
+Các mục khác trong `config.js` (sửa bằng `nano config.js` khi cần):
+
+| Dòng | Ý nghĩa |
 |---|---|
-| `BOT_TOKEN` | Bot Token (bước 1.1) |
-| `CHAT_ID` | Chat ID nhóm, dạng `-100...` (bước 1.3) |
-| `MONITOR_TOPIC_ID` | ID topic `监控` (bước 1.4) |
-| `WEBHOOK_SECRET` | Chuỗi ngẫu nhiên, tạo bằng lệnh `openssl rand -hex 24` |
-| `DOMAIN` | `kf.odogcloud.com` (không có `https://`) |
-| `PORT` | `3000` (đổi nếu cổng này đã có chương trình khác dùng) |
-| `REDIS_URL` | Giữ `redis://127.0.0.1:6379/5`. Redis có mật khẩu thì dùng `redis://:MATKHAU@127.0.0.1:6379/5` |
+| `PORT` | `3000`. Đổi thì phải đổi cả cổng trong Node.js Project |
+| `REDIS_URL` | `redis://127.0.0.1:6379/5`. Redis có mật khẩu thì `redis://:MATKHAU@127.0.0.1:6379/5` |
 | `BRAND` | Tên hiển thị, câu chào, dòng chữ cuối, chữ trên nút |
-| `WORK_HOURS` | Giờ làm việc **theo giờ Bắc Kinh**: `start`, `end` (đến giờ nhỏ hơn bắt đầu nghĩa là sang ngày hôm sau), `label` là chữ hiển thị |
+| `WORK_HOURS` | Giờ làm việc **theo giờ Bắc Kinh**: `start`, `end` (giờ kết thúc nhỏ hơn giờ bắt đầu nghĩa là sang ngày hôm sau), `label` là chữ hiển thị |
 | `AUTO_REPLY` | Tin tự gửi khi 30 giây chưa có ai trả lời |
 
-Lưu: **Ctrl+O → Enter → Ctrl+X**. Đặt quyền:
+**4.4. Chạy thử 6 giây:**
 ```bash
-chown -R www:www /www/wwwroot/kefu
+cd /www/wwwroot/kefu && chown -R www:www . && (timeout 6 sudo -u www node server.js &) ; sleep 3; curl -s http://127.0.0.1:3000/widget-config; echo
 ```
+Đúng là có `Redis 已连接`, `server running on 127.0.0.1:3000`, và JSON có `"brand"`.
 
 ---
 
-## 5. Chạy bằng Supervisor
+## 5. Tạo Node.js Project trên aaPanel
 
-aaPanel → **App Store → Supervisor → Add Daemon**:
+**Cloudflare trước** (zone `odogcloud.com`): **DNS → Add record** → `A`, Name `kf`, IP VPS website, **DNS only** (tạm thời, để xin SSL).
+
+aaPanel → **Website → Node.js Project → Add Project → Default Project**:
 
 | Ô | Điền |
 |---|---|
-| Name | `kefu` |
+| Path | `/www/wwwroot/kefu` |
+| Project Name | `kefu` |
 | Run User | `www` |
-| Run Dir | `/www/wwwroot/kefu` |
-| Start Command | `/usr/bin/node server.js` |
-| Processes | `1` |
+| Node.js runtime | `v24.22.3` |
+| Pkg Manager | **npm** |
+| Install dependencies | **Tắt** (đã cài ở mục 3) |
+| Start command | **From package.json** → `start [node server.js]` |
+| Project Port | `3000` |
+| More settings → Project Remark | `kefu` |
+| More settings → Domain name | `kf.odogcloud.com` |
 
-Kiểm tra:
-```bash
-/www/server/panel/pyenv/bin/supervisorctl -c /etc/supervisor/supervisord.conf status kefu:*; curl -s http://127.0.0.1:3000/widget-config
-```
-Đúng là thấy `RUNNING`, và một đoạn JSON có `"brand"`.
+**Confirm**. Dòng `kefu` phải ở trạng thái **Running**. aaPanel tự tạo site và reverse proxy cho `kf.odogcloud.com`, không cần viết URL rewrite.
 
 ---
 
-## 6. Tên miền, Cloudflare, aaPanel
+## 6. SSL và Cloudflare
 
-**6.1. Cloudflare** (zone `odogcloud.com`): **DNS → Add record** → `A`, Name `kf`, IP VPS website, **DNS only** (tạm thời, để xin SSL).
+1. Dòng `kefu` → **Modify** (hoặc bấm **Not Set** ở cột SSL) → **SSL → Let's Encrypt** → tích `kf.odogcloud.com` → **Apply** → bật **Force HTTPS**.
+2. Kiểm tra:
+   ```bash
+   curl -s https://kf.odogcloud.com/widget-config | head -c 80; echo
+   ```
+3. Cloudflare → bản ghi `kf` → bật **Proxied** (đám mây cam). SSL/TLS của zone vẫn là **Full (Strict)**.
+4. Giới hạn dung lượng file của Nginx (mặc định aaPanel là 50m):
+   ```bash
+   grep -rh "client_max_body_size" /www/server/nginx/conf/nginx.conf /www/server/panel/vhost/nginx/*kf.odogcloud.com* 2>/dev/null
+   ```
 
-**6.2. aaPanel:** **Website → Add site** → domain `kf.odogcloud.com`, PHP **Static** → **SSL → Let's Encrypt** → **Apply** → bật **Force HTTPS**.
-
-**6.3. URL rewrite** của site `kf.odogcloud.com`, xóa hết rồi dán:
-```nginx
-client_max_body_size 50m;
-
-location / {
-    proxy_pass http://127.0.0.1:3000;
-    proxy_http_version 1.1;
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto https;
-    proxy_read_timeout 60s;
-}
-```
-`client_max_body_size 50m` cho phép khách gửi file tới 50MB. Nếu aaPanel báo lỗi trùng dòng này, xóa dòng đó đi, vào **Config** của site rồi sửa `client_max_body_size` ở đó.
-
-**6.4.** Quay lại Cloudflare → bật **Proxied** (đám mây cam) cho `kf`. SSL/TLS của zone vẫn là **Full (Strict)**.
-
-**Không làm theo** hướng dẫn gốc (đặt SSL **Flexible** và Origin Rule tới cổng 3000), vì zone của bạn đang chạy Full (Strict).
+**Không làm theo** hướng dẫn gốc (đặt SSL **Flexible** và Origin Rule tới cổng 3000), vì zone đang chạy Full (Strict).
 
 ---
 
 ## 7. Nối webhook Telegram
 
-Chạy trên VPS (thay `TOKEN` và `SECRET` bằng giá trị trong `config.js`):
+Lệnh tự đọc token và secret từ `config.js`, không in ra màn hình:
 ```bash
-curl -s -X POST "https://api.telegram.org/botTOKEN/setWebhook" -d "url=https://kf.odogcloud.com/telegram-webhook" -d "secret_token=SECRET"
+cd /www/wwwroot/kefu && T=$(grep -oP 'BOT_TOKEN: "\K[^"]+' config.js) && S=$(grep -oP 'WEBHOOK_SECRET: "\K[^"]+' config.js) && curl -s -X POST "https://api.telegram.org/bot$T/setWebhook" -d "url=https://kf.odogcloud.com/telegram-webhook" -d "secret_token=$S" -d 'allowed_updates=["message"]'; echo; curl -s "https://api.telegram.org/bot$T/getWebhookInfo"; echo; unset T S
 ```
-Đúng là ra `{"ok":true,"result":true,"description":"Webhook was set"}`.
-
-Kiểm tra:
-```bash
-curl -s "https://api.telegram.org/botTOKEN/getWebhookInfo"
-```
-Thấy `"url":"https://kf.odogcloud.com/telegram-webhook"` và **không có** `last_error_message` là được.
+Đúng là `"Webhook was set"`, rồi `"url":"https://kf.odogcloud.com/telegram-webhook"`, `"pending_update_count":0`, **không có** `last_error_message`.
 
 ⚠️ Một bot chỉ nhận được **một webhook**. Không dùng chung bot này với chương trình khác cũng đặt webhook.
 
@@ -202,18 +219,15 @@ Trang khác (không dùng DK_Theme) muốn có khung chat thì thêm dòng này 
 ## 10. Vận hành, cập nhật
 
 - **Trả lời khách:** trả lời **trong đúng topic** của khách. Tin nhắn ngoài topic thì khách không nhận được.
-- **Khởi động lại** sau khi sửa `config.js`:
-  ```bash
-  /www/server/panel/pyenv/bin/supervisorctl -c /etc/supervisor/supervisord.conf restart kefu:*
-  ```
-- **Xem log:** aaPanel → Supervisor → `kefu` → **Log**.
+- **Khởi động lại** sau khi sửa `config.js`: aaPanel → **Website → Node.js Project** → dòng `kefu` → nút **Restart** (hoặc Stop rồi Start).
+- **Xem log, CPU, RAM:** aaPanel → Node.js Project → `kefu` → **Modify** → **Log**.
 - **Hội thoại cũ** tự xóa sau `EXPIRE_DAYS` ngày (mặc định 30), topic trên Telegram cũng bị xóa theo.
 - **Spam:** một IP gửi quá `RATE_LIMIT_COUNT` tin/phút sẽ bị chặn `RATE_LIMIT_BAN_HOURS` giờ, và topic `监控` nhận cảnh báo.
 - **Cập nhật code** từ repo `odogcloud/kefu` (giữ nguyên `config.js` trên VPS):
   ```bash
-  cd /www/wwwroot/kefu && cp config.js /root/kefu-config.js.bak && git stash && git pull && git stash pop && npm install --omit=dev && chown -R www:www . && /www/server/panel/pyenv/bin/supervisorctl -c /etc/supervisor/supervisord.conf restart kefu:*
+  cd /www/wwwroot/kefu && cp config.js /root/kefu-config.js.bak && git stash && git pull && git stash pop && npm install --omit=dev && chown -R www:www .
   ```
-  Nếu `git stash pop` báo xung đột ở `config.js`, chép lại file cấu hình đã lưu: `cp /root/kefu-config.js.bak config.js`.
+  Rồi bấm **Restart** project `kefu` trong aaPanel. Nếu `git stash pop` báo xung đột ở `config.js`, chép lại file cấu hình đã lưu: `cp /root/kefu-config.js.bak config.js`.
 - **Sao lưu:** `config.js` (chứa token) và thư mục `public/uploads/` (ảnh và file khách gửi). **Không đưa lên GitHub.**
 
 ---
@@ -222,12 +236,15 @@ Trang khác (không dùng DK_Theme) muốn có khung chat thì thêm dòng này 
 
 | Triệu chứng | Nguyên nhân | Cách sửa |
 |---|---|---|
-| Supervisor báo `FATAL`, log có `Redis 启动失败` | Redis chưa chạy, hoặc sai `REDIS_URL` / mật khẩu | Kiểm tra `redis-cli ping`. Sửa `REDIS_URL` |
-| Log có `EADDRINUSE` | Cổng 3000 đã có chương trình dùng | Đổi `PORT` trong `config.js` **và** `proxy_pass` trong URL rewrite |
+| Project không lên **Running**, log có `Redis 启动失败` | Redis chưa chạy, hoặc sai `REDIS_URL` / mật khẩu | Kiểm tra `redis-cli ping`. Sửa `REDIS_URL` |
+| Log có `EADDRINUSE` | Cổng 3000 đã có chương trình dùng (ví dụ còn bản chạy thử ở mục 4.4) | Đợi bản chạy thử tự tắt, hoặc đổi `PORT` trong `config.js` **và** cổng của project |
 | Khách gửi tin nhưng Telegram không có topic | Nhóm chưa bật Topics, bot chưa là admin hoặc thiếu quyền Manage Topics, sai `CHAT_ID` | Mục 1.2 và 1.3 |
 | Trả lời trên Telegram mà khách không nhận | Webhook chưa đặt hoặc sai secret, trả lời ngoài topic | Mục 7, `getWebhookInfo` |
-| `getWebhookInfo` báo lỗi 403 hoặc 5xx | Cloudflare chặn (Bot Fight Mode), hoặc dịch vụ không chạy | Tắt Bot Fight Mode. Kiểm tra Supervisor |
+| `getWebhookInfo` báo lỗi 403 hoặc 5xx | Cloudflare chặn (Bot Fight Mode), hoặc dịch vụ không chạy | Tắt Bot Fight Mode. Kiểm tra project `kefu` đang Running |
 | Không thấy nút chat trên odogcloud.com | Theme build khi `.env` thiếu `VITE_CHAT_WIDGET_URL` | Mục 8, build lại theme |
-| Gửi file lớn bị lỗi 413 | Nginx giới hạn dung lượng | `client_max_body_size 50m` (mục 6.3) |
+| Gửi file lớn bị lỗi 413 | Nginx giới hạn dung lượng | `client_max_body_size 50m` (mục 6) |
 | Gửi file SVG bị từ chối | Đã chặn có chủ ý (SVG có thể chứa mã độc) | Gửi PNG hoặc JPG |
+| `git clone` hỏi Username / Password | Repo đang Private | Chuyển repo sang Public (Settings → Danger Zone → Change visibility). Không nhập mật khẩu |
+| `node: command not found` | Node cài qua aaPanel chưa có trong đường dẫn | Lệnh `ln -sf` ở mục 2 |
+| `npm warn deprecated multer@1.x` | Bản code cũ | `git pull` lấy bản dùng multer 2.x |
 | Nhãn online sai giờ | Sai `WORK_HOURS` | Giờ trong `config.js` là **giờ Bắc Kinh**, không phải giờ Việt Nam |
