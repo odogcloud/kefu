@@ -10,6 +10,7 @@ const config = require("./config");
 
 // ---------- Redis 客户端 ----------
 const redisClient = redis.createClient({
+    url: config.REDIS_URL || "redis://127.0.0.1:6379/5",
     socket: {
         reconnectStrategy: (retries) => {
             if (retries > 20) {
@@ -33,7 +34,8 @@ const UPLOAD_DIR = path.join(__dirname, "public", "uploads");
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
 const ALLOWED_MIMES = [
-    "image/jpeg","image/png","image/gif","image/webp","image/bmp","image/svg+xml",
+    // SVG 可内嵌脚本，已移除
+    "image/jpeg","image/png","image/gif","image/webp","image/bmp",
     "video/mp4","video/webm","video/ogg","video/quicktime",
     "application/pdf","application/msword",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -46,7 +48,7 @@ const ALLOWED_MIMES = [
 ];
 
 const ALLOWED_EXTENSIONS = [
-    ".jpg",".jpeg",".png",".gif",".webp",".bmp",".svg",
+    ".jpg",".jpeg",".png",".gif",".webp",".bmp",
     ".mp4",".webm",".ogg",".mov",
     ".pdf",".doc",".docx",".xls",".xlsx",".ppt",".pptx",
     ".txt",".csv",".zip",".rar",".7z"
@@ -330,22 +332,22 @@ async function scheduleAutoReply(redisClient, sid, now) {
             const firstUserTime = userMsgs[0].time;
             if (now - firstUserTime > 30 * 60000) return;
 
-            await redisClient.rPush(`chat:${sid}`, JSON.stringify({
-                id: crypto.randomUUID(),
-                role: "agent",
-                type: "text",
-                text: "您好，当前是留言模式。客服暂时不在线，您的消息已成功传达，上线后会第一时间回复您，请稍候。",
-                time: Date.now()
-            }));
-            setTimeout(async () => {
-                await redisClient.rPush(`chat:${sid}`, JSON.stringify({
-                    id: crypto.randomUUID(),
-                    role: "agent",
-                    type: "text",
-                    text: "如果有任何问题或需求可以先详细描述一下，方便客服上线后快速了解情况，为您高效处理。",
-                    time: Date.now()
-                }));
-            }, 3000);
+            const replies = (config.AUTO_REPLY && config.AUTO_REPLY.length) ? config.AUTO_REPLY : [
+                "您好，当前是留言模式。客服暂时不在线，您的消息已成功传达，上线后会第一时间回复您，请稍候。"
+            ];
+            replies.forEach((text, i) => {
+                setTimeout(async () => {
+                    try {
+                        await redisClient.rPush(`chat:${sid}`, JSON.stringify({
+                            id: crypto.randomUUID(),
+                            role: "agent",
+                            type: "text",
+                            text,
+                            time: Date.now()
+                        }));
+                    } catch (e) { console.error("auto reply push failed:", e.message); }
+                }, i * 3000);
+            });
 
             await redisClient.set(autoReplyKey, "1", { EX: 3600 });
         } catch (e) {

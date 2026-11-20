@@ -71,174 +71,209 @@
     <style>
         * { box-sizing: border-box; }
         :host {
-            --btn-size: 62px; --btn-right: 20px; --btn-bottom: 67px;
-            --btn-right-shrunk: -31px; --btn-font-size: 22px;
+            --cw-accent: #7c4ddb; --cw-accent-2: #a274f5; --cw-accent-soft: #f6f2fe;
+            --cw-text: #1f1d2b; --cw-muted: #8a8698; --cw-line: #ece9f3; --cw-bg: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
         }
-        @media (max-width: 480px) {
-            :host {
-                --btn-size: 42px; --btn-right: 12px; --btn-bottom: 40px;
-                --btn-right-shrunk: -22px; --btn-font-size: 17px;
-            }
+        @media (prefers-color-scheme: dark) {
+            :host { --cw-accent-soft: #241d33; --cw-text: #ece9f3; --cw-muted: #9b96ab; --cw-line: #2c2738; --cw-bg: #17141f; }
         }
 
+        /* 悬浮按钮 */
         .cw-btn {
-            position: fixed; right: var(--btn-right); bottom: var(--btn-bottom);
-            width: var(--btn-size); height: var(--btn-size); border-radius: 50%;
-            background: #ffffff; border: 2px solid #07C160; color: #07C160;
-            display: flex; align-items: center; justify-content: center; cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1); font-size: var(--btn-font-size);
-            user-select: none; transition: transform 0.2s, right 0.4s ease; z-index: 1;
+            position: fixed; right: 24px; bottom: 24px; height: 52px; padding: 0 22px 0 18px;
+            border-radius: 26px; border: none; cursor: pointer; user-select: none;
+            background: linear-gradient(135deg, var(--cw-accent-2), var(--cw-accent));
+            color: #fff; font-size: 16px; font-weight: 600; letter-spacing: .5px;
+            display: flex; align-items: center; gap: 8px;
+            box-shadow: 0 10px 28px rgba(124, 77, 219, .35); transition: transform .2s, box-shadow .2s;
         }
-        .cw-btn:hover { transform: scale(1.05); }
-        .cw-btn.cw-btn-shrunk { right: var(--btn-right-shrunk); }
-        .cw-btn.cw-btn-shrunk:hover:not(.keep-shrunk) { right: var(--btn-right); }
+        .cw-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(124, 77, 219, .42); }
+        .cw-btn .cw-spark { font-size: 18px; line-height: 1; }
+        @media (max-width: 480px) { .cw-btn { right: 14px; bottom: 18px; height: 46px; font-size: 15px; padding: 0 18px 0 14px; } }
 
+        /* 面板 */
         .cw-panel {
-            position: fixed; right: 20px; bottom: 137px; width: 380px; height: 520px;
-            background: #f5f5f5; border-radius: 14px; box-shadow: 0 12px 40px rgba(0,0,0,0.15);
-            display: none; flex-direction: column; overflow: hidden;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        }
-        @media (max-width: 480px) {
-            .cw-panel { width: 100%; height: 98dvh; right: 0; bottom: 1px; border-radius: 0; }
+            position: fixed; right: 24px; bottom: 92px; width: 380px; height: min(600px, calc(100vh - 120px));
+            background: var(--cw-bg); color: var(--cw-text); border-radius: 22px; border: 1px solid var(--cw-line);
+            box-shadow: 0 24px 60px rgba(31, 18, 64, .18); display: none; flex-direction: column; overflow: hidden;
         }
 
-        .cw-header {
-            background: #111; color: #fff;
-            padding: 9px 14px;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            line-height: 1.2;
+        /* 头部 */
+        .cw-header { display: flex; align-items: center; gap: 10px; padding: 18px 12px 14px 16px; }
+        .cw-logo {
+            width: 46px; height: 46px; border-radius: 14px; flex-shrink: 0; color: #fff; font-size: 22px;
+            display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, var(--cw-accent-2), var(--cw-accent));
+            box-shadow: 0 6px 16px rgba(124, 77, 219, .3);
         }
-        @media (max-width: 480px) {
-            .cw-header { padding: 7px 10px; font-size: 13px; }
+        .cw-title { flex: 1; min-width: 0; }
+        .cw-title-row { display: flex; align-items: center; gap: 8px; }
+        .cw-name { font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .cw-status {
+            display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 999px;
+            font-size: 12px; color: var(--cw-muted); background: var(--cw-accent-soft); border: 1px solid var(--cw-line); flex-shrink: 0;
         }
-        .cw-header-dot {
-            width: 8px; height: 8px; border-radius: 50%;
-            background: #4ade80; margin-right: 8px; flex-shrink: 0;
+        .cw-status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #9aa0ab; }
+        .cw-status.online { color: #15803d; }
+        .cw-status.online::before { background: #22c55e; }
+        .cw-sub { font-size: 13px; color: var(--cw-muted); margin-top: 3px; }
+        .cw-icon-btn {
+            width: 28px; height: 28px; border-radius: 50%; border: none; background: transparent; color: var(--cw-muted); flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px;
         }
-        .cw-close {
-            font-size: 18px; opacity: 0.7; cursor: pointer;
-            margin-left: auto; line-height: 1; padding: 0 2px;
-        }
-        .cw-close:hover { opacity: 1; }
+        .cw-icon-btn:hover { background: var(--cw-accent-soft); color: var(--cw-accent); }
+        .cw-close { font-size: 20px; }
 
-        .cw-msgs { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; }
-
-        .cw-input-area { background: #fff; border-top: 1px solid #eee; padding: 8px 10px; position: relative; }
-        .cw-file-preview { display: none; padding: 6px 10px; background: #f0f0f0; border-radius: 8px; margin-bottom: 8px; align-items: center; gap: 6px; font-size: 12px; }
-        .cw-file-preview.show { display: flex; }
-        .cw-file-preview-remove { cursor: pointer; color: #999; background: none; border: none; }
-
-        .cw-input-row { display: flex; gap: 6px; align-items: center; }
-        .cw-input-row input {
-            flex: 1; border: none; outline: none; padding: 8px 12px; font-size: 13px;
-            border-radius: 20px; background: #f1f1f1; color: #111; min-width: 60px;
+        /* 工作时间条 */
+        .cw-hours {
+            display: flex; align-items: center; justify-content: space-between; gap: 8px;
+            padding: 9px 18px; background: var(--cw-accent-soft); border-top: 1px solid var(--cw-line);
+            font-size: 12.5px; color: var(--cw-accent);
         }
-        .cw-input-row input:disabled { opacity: 0.5; }
-        .cw-attach-btn, .cw-send-btn { flex-shrink: 0; cursor: pointer; }
-        .cw-attach-btn {
-            width: 38px; height: 38px; font-size: 22px; color: #07c160;
-            background: #f1f1f1; border-radius: 50%; border: none;
-        }
-        .cw-send-btn {
-            border: none; background: #111; color: #fff; padding: 8px 14px;
-            border-radius: 18px; font-size: 13px; font-weight: 500;
-        }
-        .cw-send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .cw-hours b { font-weight: 600; }
+        .cw-hours-right { color: var(--cw-accent); white-space: nowrap; }
 
-        .cw-msg-row { display: flex; margin: 10px 0; align-items: flex-start; gap: 8px; }
+        /* 消息区 */
+        .cw-body { position: relative; flex: 1; min-height: 0; display: flex; }
+        .cw-msgs { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; }
+        .cw-empty {
+            position: absolute; left: 0; right: 0; top: 34px; text-align: center; pointer-events: none; padding: 0 20px;
+        }
+        .cw-empty.hide { display: none; }
+        .cw-empty-title { font-size: 15px; font-weight: 700; color: var(--cw-text); opacity: .8; }
+        .cw-empty-text { font-size: 13.5px; color: var(--cw-muted); margin-top: 6px; }
+
+        .cw-msg-row { display: flex; margin: 8px 0; align-items: flex-end; gap: 8px; }
         .cw-msg-row.user { flex-direction: row-reverse; }
         .cw-avatar {
-            width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
-            display: flex; align-items: center; justify-content: center; font-size: 12px; color: #fff;
+            width: 30px; height: 30px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center;
+            justify-content: center; font-size: 11px; color: #fff;
         }
-        .cw-avatar.user { background: #07c160; }
-        .cw-avatar.agent { background: #111; }
-        .cw-bubble {
-            max-width: 75%; padding: 8px 10px; border-radius: 10px; font-size: 13px;
-            line-height: 1.5; word-break: break-word;
-        }
-        .cw-bubble.user { background: #95ec69; color: #111; border-top-right-radius: 4px; }
-        .cw-bubble.agent { background: #fff; border: 1px solid #e5e5e5; color: #111; border-top-left-radius: 4px; }
+        .cw-avatar.user { background: #c9c3d9; }
+        .cw-avatar.agent { background: linear-gradient(135deg, var(--cw-accent-2), var(--cw-accent)); }
+        .cw-bubble { max-width: 74%; padding: 9px 13px; border-radius: 16px; font-size: 14px; line-height: 1.55; word-break: break-word; white-space: pre-wrap; }
+        .cw-bubble.user { background: linear-gradient(135deg, var(--cw-accent-2), var(--cw-accent)); color: #fff; border-bottom-right-radius: 5px; }
+        .cw-bubble.agent { background: var(--cw-accent-soft); color: var(--cw-text); border-bottom-left-radius: 5px; }
 
-        .cw-file-msg { max-width: 75%; }
-        .cw-file-card { background: #fff; border: 1px solid #e5e5e5; border-radius: 12px; overflow: hidden; }
-        .cw-file-image { width: 100%; max-height: 180px; object-fit: cover; cursor: pointer; }
-        .cw-file-video { width: 100%; max-height: 180px; cursor: pointer; }
-        .cw-file-doc { display: flex; align-items: center; gap: 8px; padding: 10px; text-decoration: none; color: inherit; cursor: pointer; }
-        .cw-file-doc-icon { font-size: 32px; }
+        .cw-file-msg { max-width: 74%; }
+        .cw-file-card { background: var(--cw-bg); border: 1px solid var(--cw-line); border-radius: 14px; overflow: hidden; }
+        .cw-file-image { width: 100%; max-height: 190px; object-fit: cover; cursor: pointer; display: block; }
+        .cw-file-video { width: 100%; max-height: 190px; display: block; }
+        .cw-file-doc { display: flex; align-items: center; gap: 8px; padding: 10px; cursor: pointer; }
+        .cw-file-doc-icon { font-size: 30px; }
         .cw-file-doc-info { flex: 1; min-width: 0; }
-        .cw-file-doc-name { font-size: 12px; font-weight: 500; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .cw-file-doc-size { font-size: 10px; color: #999; margin-top: 2px; }
-        .cw-file-doc-action { color: #007aff; font-size: 11px; }
+        .cw-file-doc-name { font-size: 12.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .cw-file-doc-size { font-size: 11px; color: var(--cw-muted); margin-top: 2px; }
+        .cw-file-doc-action { color: var(--cw-accent); font-size: 12px; }
 
-        .cw-upload-progress { position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: #4ade80; display: none; }
+        .cw-load-more { width: 100%; text-align: center; padding: 4px 0 8px; flex-shrink: 0; }
+        .cw-load-more button {
+            background: var(--cw-accent-soft); border: none; border-radius: 12px; padding: 5px 14px;
+            font-size: 12px; cursor: pointer; color: var(--cw-accent);
+        }
+        .cw-load-more button:disabled { opacity: .5; cursor: default; }
+
+        /* 输入区 */
+        .cw-input-area { padding: 10px 16px 6px; position: relative; }
+        .cw-composer {
+            border: 1.5px solid #d9ccf6; border-radius: 18px; padding: 10px 12px 10px 14px; background: var(--cw-bg);
+            transition: border-color .2s, box-shadow .2s;
+        }
+        .cw-composer:focus-within { border-color: var(--cw-accent); box-shadow: 0 0 0 4px rgba(124, 77, 219, .1); }
+        .cw-composer input[type=text] {
+            width: 100%; border: none; outline: none; background: transparent; color: var(--cw-text);
+            font-size: 14.5px; padding: 4px 2px 12px; font-family: inherit;
+        }
+        .cw-composer input[type=text]::placeholder { color: #b4afc2; }
+        .cw-composer input:disabled { opacity: .5; }
+        .cw-tools { display: flex; align-items: center; gap: 10px; }
+        .cw-attach-btn {
+            width: 32px; height: 32px; border: none; background: transparent; cursor: pointer; color: var(--cw-muted);
+            display: flex; align-items: center; justify-content: center; border-radius: 9px; flex-shrink: 0;
+        }
+        .cw-attach-btn:hover { background: var(--cw-accent-soft); color: var(--cw-accent); }
+        .cw-attach-btn svg { width: 22px; height: 22px; }
+        .cw-hint { flex: 1; font-size: 12px; color: #b4afc2; }
+        .cw-send-btn {
+            border: none; cursor: pointer; color: #fff; font-size: 14.5px; font-weight: 600; flex-shrink: 0;
+            padding: 8px 16px; border-radius: 12px; display: flex; align-items: center; gap: 6px;
+            background: linear-gradient(135deg, var(--cw-accent-2), var(--cw-accent));
+        }
+        .cw-send-btn svg { width: 16px; height: 16px; }
+        .cw-send-btn:disabled { opacity: .45; cursor: not-allowed; }
+        .cw-footer { text-align: center; font-size: 11.5px; color: var(--cw-muted); padding: 8px 0 12px; }
+
+        .cw-file-preview { display: none; padding: 6px 10px; background: var(--cw-accent-soft); border-radius: 10px; margin-bottom: 8px; align-items: center; gap: 6px; font-size: 12px; }
+        .cw-file-preview.show { display: flex; }
+        .cw-file-preview-remove { cursor: pointer; color: var(--cw-muted); background: none; border: none; margin-left: auto; }
+
+        .cw-upload-progress { position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: var(--cw-accent); display: none; }
         .cw-upload-progress.show { display: block; }
         .cw-drop-overlay {
-            display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(17,17,17,0.9); z-index: 10; align-items: center; justify-content: center;
-            flex-direction: column; gap: 12px; color: #fff; font-size: 14px;
+            display: none; position: absolute; inset: 0; background: rgba(54, 30, 110, .88); z-index: 10;
+            align-items: center; justify-content: center; flex-direction: column; gap: 12px; color: #fff; font-size: 14px;
         }
         .cw-drop-overlay.show { display: flex; }
-        .cw-uploading-overlay {
-            display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(245,245,245,0.8); z-index: 11; align-items: center; justify-content: center;
-        }
+        .cw-uploading-overlay { display: none; position: absolute; inset: 0; background: rgba(255,255,255,.7); z-index: 11; align-items: center; justify-content: center; }
         .cw-uploading-overlay.show { display: flex; }
-        .cw-spinner {
-            width: 32px; height: 32px; border: 3px solid #e0e0e0; border-top: 3px solid #111;
-            border-radius: 50%; animation: cw-spin 1s linear infinite;
-        }
+        .cw-spinner { width: 30px; height: 30px; border: 3px solid #e6defa; border-top-color: var(--cw-accent); border-radius: 50%; animation: cw-spin 1s linear infinite; }
         @keyframes cw-spin { to { transform: rotate(360deg); } }
-
         .cw-error-toast {
-            position: fixed; top: 20px; right: 20px; background: #ff4444; color: #fff;
-            padding: 12px 20px; border-radius: 8px; font-size: 13px; z-index: 1000000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            position: fixed; top: 20px; right: 20px; background: #e5484d; color: #fff; padding: 12px 20px;
+            border-radius: 10px; font-size: 13px; z-index: 1000000; box-shadow: 0 4px 12px rgba(0,0,0,.2);
         }
-        .cw-load-more { width: 100%; text-align: center; padding: 10px 0; flex-shrink: 0; }
-        .cw-load-more button {
-            background: #e0e0e0; border: none; border-radius: 12px; padding: 6px 16px;
-            font-size: 12px; cursor: pointer; color: #333;
-        }
-        .cw-load-more button:disabled { opacity: 0.5; cursor: default; }
     </style>
 
-    <div class="cw-btn">💬</div>
-    <div class="cw-panel">
+    <button class="cw-btn" type="button"><span class="cw-spark">✦</span><span class="cw-btn-text">联系客服</span></button>
+    <div class="cw-panel" role="dialog" aria-label="在线客服">
         <div class="cw-header">
-            <span class="cw-header-dot"></span>
-            <span>在线客服</span>
-            <span class="cw-close">✕</span>
-        </div>
-        <div class="cw-msgs">
-            <div class="cw-load-more">
-                <button class="cw-load-more-btn">加载更早消息</button>
+            <div class="cw-logo">✦</div>
+            <div class="cw-title">
+                <div class="cw-title-row"><span class="cw-name">在线客服</span><span class="cw-status">离线</span></div>
+                <div class="cw-sub"></div>
             </div>
+            <button class="cw-icon-btn cw-info" type="button" title="">ⓘ</button>
+            <button class="cw-icon-btn cw-close" type="button" title="收起">⌄</button>
+        </div>
+        <div class="cw-hours"><span>🕒 <b class="cw-hours-text"></b></span><span class="cw-hours-right">人工客服</span></div>
+        <div class="cw-body">
+            <div class="cw-msgs">
+                <div class="cw-load-more">
+                    <button class="cw-load-more-btn">加载更早消息</button>
+                </div>
+            </div>
+            <div class="cw-empty"><div class="cw-empty-title"></div><div class="cw-empty-text"></div></div>
         </div>
         <div class="cw-input-area">
             <div class="cw-file-preview">
-                <span class="cw-file-preview-icon">＋</span>
+                <span class="cw-file-preview-icon">📎</span>
                 <div class="cw-file-preview-info">
                     <div class="cw-file-preview-name"></div>
                     <div class="cw-file-preview-size"></div>
                 </div>
-                <button class="cw-file-preview-remove">✕</button>
+                <button class="cw-file-preview-remove" type="button">✕</button>
             </div>
-            <div class="cw-input-row">
+            <div class="cw-composer">
                 <input type="text" placeholder="输入消息..." />
-                <button class="cw-attach-btn" title="发送文件">＋</button>
-                <button class="cw-send-btn">发送</button>
+                <div class="cw-tools">
+                    <button class="cw-attach-btn" type="button" title="发送图片或文件">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="M21 15l-5-5L5 21"/></svg>
+                    </button>
+                    <span class="cw-hint">支持文字和图片</span>
+                    <button class="cw-send-btn" type="button">发送
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                    </button>
+                </div>
             </div>
             <div class="cw-upload-progress"></div>
         </div>
+        <div class="cw-footer"></div>
         <div class="cw-drop-overlay">
             <span class="cw-drop-overlay-icon">📤</span><span>释放文件以上传</span>
         </div>
         <div class="cw-uploading-overlay"><div class="cw-spinner"></div></div>
-        <input type="file" style="display: none;" accept=".jpg,.jpeg,.png,.gif,.webp,.bmp,.svg,.mp4,.webm,.ogg,.mov,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar,.7z" />
+        <input type="file" style="display: none;" accept=".jpg,.jpeg,.png,.gif,.webp,.bmp,.mp4,.webm,.ogg,.mov,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar,.7z" />
     </div>
     `;
 
@@ -260,6 +295,40 @@
     const uploadProgress = shadow.querySelector(".cw-upload-progress");
     const dropOverlay = shadow.querySelector(".cw-drop-overlay");
     const uploadingOverlay = shadow.querySelector(".cw-uploading-overlay");
+    // O Dog Cloud 修改：新界面元素
+    const btnText = shadow.querySelector(".cw-btn-text");
+    const emptyState = shadow.querySelector(".cw-empty");
+    let BRAND = { buttonOpen: "联系客服", buttonClose: "关闭客服" };
+
+    function escapeHtml(str) {
+        return String(str).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+
+    // 有消息时隐藏欢迎语
+    function updateEmptyState() {
+        emptyState.classList.toggle("hide", !!msgsContainer.querySelector(".cw-msg-row"));
+    }
+    new MutationObserver(updateEmptyState).observe(msgsContainer, { childList: true });
+
+    // 读取品牌、工作时间、在线状态
+    async function loadWidgetConfig() {
+        try {
+            const r = await fetch(API + "/widget-config", { cache: "no-store" });
+            const c = await r.json();
+            BRAND = Object.assign(BRAND, c.brand || {});
+            shadow.querySelector(".cw-name").textContent = BRAND.name || "在线客服";
+            shadow.querySelector(".cw-sub").textContent = BRAND.subtitle || "";
+            shadow.querySelector(".cw-empty-title").textContent = BRAND.greetingTitle || "";
+            shadow.querySelector(".cw-empty-text").textContent = BRAND.greetingText || "";
+            shadow.querySelector(".cw-footer").textContent = BRAND.footer || "";
+            shadow.querySelector(".cw-hours-text").textContent = c.hours || "";
+            shadow.querySelector(".cw-info").title = c.hours ? ("工作时间：" + c.hours) : "";
+            const st = shadow.querySelector(".cw-status");
+            st.textContent = c.online ? "在线" : "离线";
+            st.classList.toggle("online", !!c.online);
+            btnText.textContent = open ? BRAND.buttonClose : BRAND.buttonOpen;
+        } catch (e) { /* 保持默认文字 */ }
+    }
 
     // =========================
     // 5. 工具函数
@@ -340,7 +409,8 @@
                 const ext = (m.fileName || "").split(".").pop()?.toLowerCase();
                 const iconMap = {jpg:"🖼️",jpeg:"🖼️",png:"🖼️",gif:"🖼️",webp:"🖼️",bmp:"🖼️",svg:"🖼️",mp4:"🎬",webm:"🎬",ogg:"🎬",mov:"🎬",pdf:"📕",doc:"📘",docx:"📘",xls:"📗",xlsx:"📗",ppt:"📙",pptx:"📙",txt:"📄",csv:"📊",zip:"📦",rar:"📦","7z":"📦"};
                 const icon = iconMap[ext] || "📄";
-                docBtn.innerHTML = `<span class="cw-file-doc-icon">${icon}</span><div class="cw-file-doc-info"><div class="cw-file-doc-name">${m.fileName||"文件"}</div><div class="cw-file-doc-size">${m.fileSize?formatFileSize(m.fileSize):""}</div></div><span class="cw-file-doc-action">查看</span>`;
+                // O Dog Cloud 修改：文件名转义，防止 XSS
+                docBtn.innerHTML = `<span class="cw-file-doc-icon">${icon}</span><div class="cw-file-doc-info"><div class="cw-file-doc-name">${escapeHtml(m.fileName||"文件")}</div><div class="cw-file-doc-size">${m.fileSize?formatFileSize(m.fileSize):""}</div></div><span class="cw-file-doc-action">查看</span>`;
                 fileCard.appendChild(docBtn);
             }
             fileWrapper.appendChild(fileCard);
@@ -854,68 +924,37 @@
     // =========================
     // 12. UI 交互逻辑
     // =========================
-    let shrinkTimer = null;
-    function clearShrinkTimer() {
-        if (shrinkTimer) { clearTimeout(shrinkTimer); shrinkTimer = null; }
-    }
-    function scheduleShrink() {
-        clearShrinkTimer();
-        if (!open) {
-            shrinkTimer = setTimeout(() => {
-                if (!open) btn.classList.add("cw-btn-shrunk");
-            }, 6000);
+    // O Dog Cloud 修改：胶囊按钮常驻，点击切换「联系客服 / 关闭客服」
+    function scheduleShrink() { /* 新界面不再收缩按钮 */ }
+
+    function setOpen(next) {
+        open = next;
+        panel.style.display = open ? "flex" : "none";
+        btnText.textContent = open ? BRAND.buttonClose : BRAND.buttonOpen;
+        if (open) {
+            loadWidgetConfig();
+            input.focus();
+            const last = msgsContainer.lastElementChild;
+            if (last) last.scrollIntoView({ block: "end", behavior: "instant" });
+            if (sid && token && !pollTimer) startPolling();
+        } else {
+            stopPolling();
         }
     }
 
     btn.onclick = () => {
         // 移动端：打开独立聊天页面
         if (isMobileDevice()) {
-            window.open(`${API}/chat.html`, '_blank');
+            window.open(`${API}/chat.html`, "_blank");
             return;
         }
-
-        // PC 端
-        clearShrinkTimer();
-        btn.classList.remove("cw-btn-shrunk", "keep-shrunk");
-        open = !open;
-        panel.style.display = open ? "flex" : "none";
-        btn.style.display = open ? "none" : "";
-        if (open) {
-            input.focus();
-            const last = msgsContainer.lastElementChild;
-            if (last) last.scrollIntoView({ block: 'end', behavior: 'instant' });
-            if (sid && token && !pollTimer) {
-                startPolling();
-            }
-        } else {
-            stopPolling();
-            scheduleShrink();
-        }
+        setOpen(!open);
     };
 
     shadow.querySelector(".cw-close").onclick = (e) => {
         e.stopPropagation();
-        open = false;
-        panel.style.display = "none";
-        btn.style.display = "";
-        stopPolling();
-        scheduleShrink();
+        setOpen(false);
     };
-
-    let btnDragCounter = 0;
-    btn.addEventListener("dragenter", (e) => {
-        e.preventDefault(); e.stopPropagation();
-        btnDragCounter++; btn.classList.add("keep-shrunk");
-    });
-    btn.addEventListener("dragleave", (e) => {
-        e.preventDefault(); e.stopPropagation();
-        btnDragCounter--;
-        if (btnDragCounter <= 0) { btnDragCounter = 0; btn.classList.remove("keep-shrunk"); }
-    });
-    btn.addEventListener("drop", (e) => {
-        e.preventDefault(); e.stopPropagation();
-        btnDragCounter = 0; btn.classList.remove("keep-shrunk");
-    });
 
     // =========================
     // 13. 移动端键盘适配（弹窗已废弃，保留以防直接嵌入使用）
@@ -941,6 +980,7 @@
     // 14. 启动流程
     // =========================
     (async () => {
+        loadWidgetConfig();
         // 移动端无需加载弹窗资源，直接显示按钮
         if (isMobileDevice()) {
             scheduleShrink();
