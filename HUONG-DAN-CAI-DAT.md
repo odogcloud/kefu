@@ -230,9 +230,10 @@ Trang khác (không dùng DK_Theme) muốn có khung chat thì thêm dòng này 
 - **Spam:** một IP gửi quá `RATE_LIMIT_COUNT` tin/phút sẽ bị chặn `RATE_LIMIT_BAN_HOURS` giờ, và topic `监控` nhận cảnh báo.
 - **Cập nhật code** từ repo `odogcloud/kefu` (giữ nguyên `config.js` trên VPS):
   ```bash
-  cd /www/wwwroot/kefu && cp config.js /root/kefu-config.js.bak && git stash && git pull && git stash pop && npm install --omit=dev && chown -R www:www .
+  git config --global --add safe.directory /www/wwwroot/kefu; cd /www/wwwroot/kefu && cp config.js /root/kefu-config.js.bak && git stash && git pull && git stash pop && npm install --omit=dev && chown -R www:www .
   ```
-  Rồi bấm **Restart** project `kefu` trong aaPanel. Nếu `git stash pop` báo xung đột ở `config.js`, chép lại file cấu hình đã lưu: `cp /root/kefu-config.js.bak config.js`.
+  Rồi bấm **Restart** project `kefu` trong aaPanel (chỉ sửa file trong `public/` thì không cần Restart).
+- **Sau khi cập nhật giao diện** (`public/chat-widget.js`, `public/chat.html`): Cloudflare → **Caching → Purge Cache → Custom Purge** hai địa chỉ `https://kf.odogcloud.com/chat-widget.js` và `https://kf.odogcloud.com/chat.html`. Nếu `git stash pop` báo xung đột ở `config.js`, chép lại file cấu hình đã lưu: `cp /root/kefu-config.js.bak config.js`.
 - **Sao lưu:** `config.js` (chứa token) và thư mục `public/uploads/` (ảnh và file khách gửi). **Không đưa lên GitHub.**
 
 ---
@@ -249,6 +250,7 @@ Trang khác (không dùng DK_Theme) muốn có khung chat thì thêm dòng này 
 | Không thấy nút chat trên odogcloud.com | Theme build khi `.env` thiếu `VITE_CHAT_WIDGET_URL` | Mục 8, build lại theme |
 | Gửi file lớn bị lỗi 413 | Nginx giới hạn dung lượng | `client_max_body_size 50m` (mục 6) |
 | Gửi file SVG bị từ chối | Đã chặn có chủ ý (SVG có thể chứa mã độc) | Gửi PNG hoặc JPG |
+| `fatal: detected dubious ownership` khi `git pull` | Thư mục thuộc user `www`, đang chạy git bằng root | `git config --global --add safe.directory /www/wwwroot/kefu` (chỉ cần một lần) |
 | `git clone` hỏi Username / Password | Repo đang Private | Chuyển repo sang Public (Settings → Danger Zone → Change visibility). Không nhập mật khẩu |
 | `node: command not found` | Node cài qua aaPanel chưa có trong đường dẫn | Lệnh `ln -sf` ở mục 2 |
 | `npm warn deprecated multer@1.x` | Bản code cũ | `git pull` lấy bản dùng multer 2.x |
@@ -314,7 +316,7 @@ Kiểm tra:
 - Xem log: aaPanel → **Supervisor** → `kefu` → **Log**.
 - Cập nhật code:
   ```bash
-  cd /www/wwwroot/kefu && cp config.js /root/kefu-config.js.bak && git stash && git pull && git stash pop && npm install --omit=dev && chown -R www:www . && /www/server/panel/pyenv/bin/supervisorctl -c /etc/supervisor/supervisord.conf restart kefu:*
+  git config --global --add safe.directory /www/wwwroot/kefu; cd /www/wwwroot/kefu && cp config.js /root/kefu-config.js.bak && git stash && git pull && git stash pop && npm install --omit=dev && chown -R www:www . && /www/server/panel/pyenv/bin/supervisorctl -c /etc/supervisor/supervisord.conf restart kefu:*
   ```
 
 **12.7. Chuyển từ cách 1 sang cách 2** (hoặc ngược lại):
