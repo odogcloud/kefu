@@ -105,7 +105,9 @@
             background: linear-gradient(135deg, #9465ff, #7055e6); color: #fff; font-size: 23px; box-shadow: 0 5px 12px #8358e327;
         }
         .cw-title { flex: 1; min-width: 0; }
-        .cw-name { font-size: 16px; font-weight: 650; margin: 0 0 4px; color: #28243a; line-height: 24px; height: 24px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .cw-name { display: flex; align-items: center; font-size: 16px; font-weight: 650; margin: 0 0 4px; color: #28243a; line-height: 24px; height: 24px; white-space: nowrap; min-width: 0; }
+        .cw-name-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+        .cw-name .cw-status { flex: none; }
         .cw-status {
             display: inline-flex; vertical-align: middle; align-items: center; gap: 4px; margin-left: 5px; padding: 2px 7px;
             border-radius: 12px; font-size: 11px; font-weight: 500; line-height: 16px; color: #667085; background: #f2f4f7; border: 1px solid #e4e7ec;
@@ -221,7 +223,7 @@
         }
 
         /* 手机：按钮靠边，面板全屏 */
-        @media (max-width: 600px) {
+        @media (max-width: 600px), (max-height: 500px) {
             .cw-btn { right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); }
             .cw-panel { inset: 0; width: 100%; max-width: 100vw; height: 100%; height: 100dvh; border-radius: 0; overscroll-behavior: contain; }
             .cw-chat { border-radius: 0; border: 0; padding-top: env(safe-area-inset-top); }
@@ -947,7 +949,7 @@
     function scheduleShrink() { /* 新界面不再收缩按钮 */ }
 
     // 手机全屏：面板贴合「可见区域」（键盘弹出时 visualViewport 变小），并锁住背景页面滚动
-    const smallScreen = window.matchMedia("(max-width: 600px)");
+    const smallScreen = window.matchMedia("(max-width: 600px), (max-height: 500px)");
     let savedOverflow = null;
     function fitMobilePanel() {
         const vv = window.visualViewport;
