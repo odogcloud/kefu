@@ -223,10 +223,14 @@
         /* 手机：按钮靠边，面板全屏 */
         @media (max-width: 600px) {
             .cw-btn { right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); }
-            .cw-panel { inset: 0; width: 100%; height: 100%; height: 100dvh; border-radius: 0; }
+            .cw-panel { inset: 0; width: 100%; max-width: 100vw; height: 100%; height: 100dvh; border-radius: 0; overscroll-behavior: contain; }
             .cw-chat { border-radius: 0; border: 0; padding-top: env(safe-area-inset-top); }
+            /* iPhone：输入框字号小于 16px 时 Safari 会自动放大页面，导致布局错位 */
+            .cw-composer textarea { font-size: 16px; line-height: 1.6; }
+            .cw-attach-btn { width: 40px; height: 40px; }
+            .cw-send-btn { min-height: 38px; }
             .cw-header { padding-left: 15px; padding-right: 15px; }
-            .cw-footer { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+            .cw-footer { padding: 12px 8px max(12px, env(safe-area-inset-bottom)); }
         }
         @media (prefers-reduced-motion: reduce) { .cw-btn { transition: none; } }
     </style>
@@ -942,13 +946,48 @@
     // O Dog Cloud 修改：胶囊按钮常驻，点击切换「联系客服 / 关闭客服」
     function scheduleShrink() { /* 新界面不再收缩按钮 */ }
 
+    // 手机全屏：面板贴合「可见区域」（键盘弹出时 visualViewport 变小），并锁住背景页面滚动
+    const smallScreen = window.matchMedia("(max-width: 600px)");
+    let savedOverflow = null;
+    function fitMobilePanel() {
+        const vv = window.visualViewport;
+        if (!open || !smallScreen.matches || !vv) {
+            ["top", "left", "width", "height", "right", "bottom"].forEach(k => panel.style.removeProperty(k));
+            return;
+        }
+        panel.style.top = vv.offsetTop + "px";
+        panel.style.left = vv.offsetLeft + "px";
+        panel.style.width = vv.width + "px";
+        panel.style.height = vv.height + "px";
+        panel.style.right = "auto";
+        panel.style.bottom = "auto";
+    }
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener("resize", fitMobilePanel);
+        window.visualViewport.addEventListener("scroll", fitMobilePanel);
+    }
+    smallScreen.addEventListener && smallScreen.addEventListener("change", fitMobilePanel);
+    function lockPageScroll(lock) {
+        const el = document.documentElement;
+        if (lock && smallScreen.matches) {
+            if (savedOverflow === null) savedOverflow = el.style.overflow;
+            el.style.overflow = "hidden";
+        } else if (savedOverflow !== null) {
+            el.style.overflow = savedOverflow;
+            savedOverflow = null;
+        }
+    }
+
     function setOpen(next) {
         open = next;
         panel.style.display = open ? "flex" : "none";
         btnText.textContent = open ? BRAND.buttonClose : BRAND.buttonOpen;
+        lockPageScroll(open);
+        fitMobilePanel();
         if (open) {
             loadWidgetConfig();
-            input.focus();
+            // 手机上不自动聚焦，避免一打开就弹出键盘
+            if (!smallScreen.matches) input.focus();
             const last = msgsContainer.lastElementChild;
             if (last) last.scrollIntoView({ block: "end", behavior: "instant" });
             if (sid && token && !pollTimer) startPolling();
